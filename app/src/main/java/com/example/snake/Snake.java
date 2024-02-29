@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.media.MediaPlayer;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -62,6 +63,10 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
     private Paint paint;
 
+    private MediaPlayer comerManzana;
+    private MediaPlayer pantallaInicio;
+    private MediaPlayer juego;
+
     public Snake(Context context, Point tamano) {
         super(context);
 
@@ -84,6 +89,11 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         snakeYs = new int[100];
 
         surfaceHolder.addCallback(this);
+
+        comerManzana = MediaPlayer.create(context, R.raw.eat_apple);
+        pantallaInicio = MediaPlayer.create(context, R.raw.pantalla_inicio);
+        juego = MediaPlayer.create(context, R.raw.game);
+
         //newGame();
     }
 
@@ -137,6 +147,8 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
     public void newGame() {
         //Empieza con 1 de tamaño, un "bloque"
+        juego.setVolume(0.3f, 0.3f);
+        juego.start();
         snakeLength = 1;
         FPS = 10;
         snakeXs[0] = numBloquesAncho / 2;
@@ -167,6 +179,9 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
             puntuacion = puntuacion + 2;
             FPS = FPS + 1;
             snakeLength = snakeLength + 2;
+        }
+        if(comerManzana != null){
+            comerManzana.start();
         }
         spawnApple();
     }
