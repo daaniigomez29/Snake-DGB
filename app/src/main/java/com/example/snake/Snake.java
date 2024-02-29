@@ -30,7 +30,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     private int tamanoPixel;
 
     // El tamaño del area de juego
-    private final int numBloquesAncho = 25;
+    private final int numBloquesAncho = 22;
     private int numBloquesAlto;
 
     public enum Movimiento {UP, RIGHT, DOWN, LEFT}
@@ -41,7 +41,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     // Controlar actualizaciones de tiempo
     private long siguienteFrame;
     // Actualiza el juego 10 veces por segundo
-    private long FPS = 10;
+    private double FPS = 10;
     private final long milisegundosPorS = 1000;
 
     private int puntuacion;
@@ -159,14 +159,14 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     }
 
     private void eatApple() {
-        snakeLength++;
-
         if (manzanaDorada == 0) {
             puntuacion = puntuacion + 1;
-            FPS++;
+            FPS = FPS + 0.5;
+            snakeLength++;
         } else if (manzanaDorada == 1) {
             puntuacion = puntuacion + 2;
-            FPS = FPS + 2;
+            FPS = FPS + 1;
+            snakeLength = snakeLength + 2;
         }
         spawnApple();
     }
@@ -272,7 +272,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     public boolean updateRequired() {
         if (siguienteFrame <= System.currentTimeMillis()) {
             // Actualiza frame
-            siguienteFrame = System.currentTimeMillis() + milisegundosPorS / FPS;
+            siguienteFrame = (long) (System.currentTimeMillis() + milisegundosPorS / FPS);
 
             // Devuelve true, la actualización se realiza y se dibuja de nuevo
             return true;
