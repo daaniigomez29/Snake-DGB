@@ -64,7 +64,6 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     private Paint paint;
 
     private MediaPlayer comerManzana;
-    private MediaPlayer pantallaInicio;
     private MediaPlayer juego;
 
     public Snake(Context context, Point tamano) {
@@ -91,10 +90,8 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         surfaceHolder.addCallback(this);
 
         comerManzana = MediaPlayer.create(context, R.raw.eat_apple);
-        pantallaInicio = MediaPlayer.create(context, R.raw.pantalla_inicio);
         juego = MediaPlayer.create(context, R.raw.game);
-
-        //newGame();
+        juego.setVolume(0.3f, 0.3f);
     }
 
     // Método que se llama cuando el Surface es creado
@@ -130,6 +127,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
     public void pause() {
         isPlaying = false;
+        juego.pause();
         try {
             thread.join();
         } catch (InterruptedException e) {
@@ -147,7 +145,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
     public void newGame() {
         //Empieza con 1 de tamaño, un "bloque"
-        juego.setVolume(0.3f, 0.3f);
+        juego = MediaPlayer.create(getContext(), R.raw.game);
         juego.start();
         snakeLength = 1;
         FPS = 10;
@@ -239,6 +237,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         moverSnake();
 
         if (detectDeath()) {
+            juego.stop();
             newGame();
         }
     }
