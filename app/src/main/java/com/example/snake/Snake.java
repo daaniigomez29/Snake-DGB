@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.media.MediaPlayer;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -24,8 +25,24 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     private int snakeLength;
 
     //Posiciones de la manzana
-    private int appleX;
-    private int appleY;
+    private int manzanaX = 0;
+    private int manzanaY = 0;
+
+    //Manzana dorada que da doble de puntos
+    private int manzanaDorada = 0;
+
+    //Vidas del jugador
+    private int vidas = 1;
+
+    //Posiciones escudo
+    private int escudoX = -1;
+    private int escudoY = -1;
+
+    //Número aleatorio para saber cuantas manzanas tiene que comer el jugador para que aparezca un escudo
+    private int cuantoFaltaParaEscudo = 0;
+
+    //Si la serpiente se come el escudo
+    private boolean tieneEscudo = false;
 
     // Tamaño en píxeles del juego
     private int tamanoPixel;
@@ -51,9 +68,6 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
     private float dedoX, dedoY;
     private static final float MIN_DISTANCIA_DESLIZAMIENTO = 100;
-
-
-    private int manzanaDorada = 0;
 
     private volatile boolean isPlaying;
 
@@ -98,7 +112,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         if (juegoEmpezado == -1) {
-            newGame();
+            nuevoJuego();
             juegoEmpezado = 1;
         } else {
             resume();
@@ -143,32 +157,42 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         thread.start();
     }
 
-    public void newGame() {
+    public void nuevoJuego() {
         //Empieza con 1 de tamaño, un "bloque"
         juego = MediaPlayer.create(getContext(), R.raw.game);
         juego.start();
         snakeLength = 1;
         FPS = 10;
+        vidas = 1;
+        cuantoFaltaParaEscudo = 0;
         snakeXs[0] = numBloquesAncho / 2;
         snakeYs[0] = numBloquesAlto / 2;
 
-        spawnApple();
+        spawnManzana();
 
         puntuacion = 0;
 
         siguienteFrame = System.currentTimeMillis();
     }
 
-    public void spawnApple() {
+    public void spawnManzana() {
         Random randomManzana = new Random();
         manzanaDorada = randomManzana.nextInt(2);
 
         Random randomPosicion = new Random();
-        appleX = randomPosicion.nextInt(numBloquesAncho - 1) + 1;
-        appleY = randomPosicion.nextInt(numBloquesAlto - 1) + 1;
+        manzanaX = randomPosicion.nextInt(numBloquesAncho - 1) + 1;
+        manzanaY = randomPosicion.nextInt(numBloquesAlto - 1) + 1;
     }
 
-    private void eatApple() {
+    public void spawnEscudo(){
+        Random randomPosicion = new Random();
+        while(escudoX != manzanaX && escudoY != manzanaY){
+            escudoX = randomPosicion.nextInt(numBloquesAncho - 1) + 1;
+            escudoY = randomPosicion.nextInt(numBloquesAlto - 1) + 1;
+        }
+    }
+
+    private void comerManzana() {
         if (manzanaDorada == 0) {
             puntuacion = puntuacion + 1;
             FPS = FPS + 0.5;
@@ -181,7 +205,25 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         if(comerManzana != null){
             comerManzana.start();
         }
-        spawnApple();
+        cuantoFaltaParaEscudo--;
+        spawnManzana();
+
+        if(puntuacion == 10 || puntuacion == 11){
+            Random random = new Random();
+            cuantoFaltaParaEscudo = random.nextInt(5) + 1;
+        }
+
+        if(cuantoFaltaParaEscudo == 0){
+            spawnEscudo();
+        }
+    }
+
+    private void comerEscudo(){
+        Random random = new Random();
+        cuantoFaltaParaEscudo = random.nextInt(5) + 1;
+        vidas++;
+        escudoX = -1;
+        escudoY = -1;
     }
 
     private void moverSnake() {
@@ -210,35 +252,54 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         }
     }
 
-    private boolean detectDeath() {
+    private boolean detectarMuerte() {
         boolean dead = false;
 
-        // Hit the screen edge
-        if (snakeXs[0] == -1) dead = true;
-        if (snakeXs[0] >= numBloquesAncho) dead = true;
-        if (snakeYs[0] == -1) dead = true;
-        if (snakeYs[0] == numBloquesAlto) dead = true;
+        // Se choca con el borde de la pantalla
+        if (snakeXs[0] == -1){
+            vidas--;
+            snakeXs[0] = numBloquesAncho - 1;
+        }
+        if (snakeXs[0] >= numBloquesAncho){
+            vidas--;
+            snakeXs[0] = 0;
+        }
+        if (snakeYs[0] == -1){
+            vidas--;
+            snakeYs[0] = numBloquesAlto - 1;
+        }
+        if (snakeYs[0] == numBloquesAlto){
+            vidas--;
+            snakeYs[0] = 0;
+        }
 
-        // Eaten itself?
+        if(vidas == 0){
+            dead = true;
+        }
+
+        // Se come a el mismo
         for (int i = snakeLength - 1; i > 0; i--) {
             if ((i > 4) && (snakeXs[0] == snakeXs[i]) && (snakeYs[0] == snakeYs[i])) {
                 dead = true;
             }
         }
-
         return dead;
     }
 
     public void update() {
-        if (snakeXs[0] == appleX && snakeYs[0] == appleY) {
-            eatApple();
+        if (snakeXs[0] == manzanaX && snakeYs[0] == manzanaY) {
+            comerManzana();
+        }
+
+        if(snakeXs[0] == escudoX && snakeYs[0] == escudoY){
+            comerEscudo();
         }
 
         moverSnake();
 
-        if (detectDeath()) {
+        if (detectarMuerte()) {
             juego.stop();
-            newGame();
+            nuevoJuego();
         }
     }
 
@@ -249,12 +310,16 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
             //Fondo del juego
             canvas.drawColor(Color.argb(255, 26, 128, 182));
 
-            paint.setTextSize(90);
+            paint.setTextSize(70);
             paint.setColor(Color.WHITE);
             canvas.drawText("Puntuación: " + puntuacion, 10, 70, paint);
 
             //Color de Snake
-            paint.setColor(Color.GREEN);
+            if(vidas > 1){
+                paint.setColor(Color.CYAN);
+            } else{
+                paint.setColor(Color.GREEN);
+            }
             //Dibuja a Snake en cada bloque
             for (int i = 0; i < snakeLength; i++) {
                 canvas.drawRect(snakeXs[i] * tamanoPixel,
@@ -272,10 +337,18 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
             }
 
             // Pintar manzana
-            canvas.drawRect(appleX * tamanoPixel,
-                    (appleY * tamanoPixel),
-                    (appleX * tamanoPixel) + tamanoPixel,
-                    (appleY * tamanoPixel) + tamanoPixel,
+            canvas.drawRect(manzanaX * tamanoPixel,
+                    (manzanaY * tamanoPixel),
+                    (manzanaX * tamanoPixel) + tamanoPixel,
+                    (manzanaY * tamanoPixel) + tamanoPixel,
+                    paint);
+
+            paint.setColor(Color.CYAN);
+            //Pintar escudo
+            canvas.drawRect(escudoX * tamanoPixel,
+                    (escudoY * tamanoPixel),
+                    (escudoX * tamanoPixel) + tamanoPixel,
+                    (escudoY * tamanoPixel) + tamanoPixel,
                     paint);
 
             // Desbloquea el canvas y actualiza el dibujo
@@ -312,19 +385,19 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
                 // Determina la dirección del deslizamiento
                 if (Math.abs(deltaX) > Math.abs(deltaY)) {
                     // Deslizamiento horizontal
-                    if (deltaX > 0) {
+                    if (deltaX > 0 && movimiento != Movimiento.LEFT) {
                         // Deslizamiento hacia la derecha
                         movimiento = Movimiento.RIGHT;
-                    } else {
+                    } else if(movimiento != Movimiento.RIGHT) {
                         // Deslizamiento hacia la izquierda
                         movimiento = Movimiento.LEFT;
                     }
                 } else {
                     // Deslizamiento vertical
-                    if (deltaY > 0) {
+                    if (deltaY > 0 && movimiento != Movimiento.UP) {
                         // Deslizamiento hacia abajo
                         movimiento = Movimiento.DOWN;
-                    } else if(Math.abs(deltaY) > MIN_DISTANCIA_DESLIZAMIENTO){
+                    } else if(Math.abs(deltaY) > MIN_DISTANCIA_DESLIZAMIENTO && movimiento != Movimiento.DOWN){
                         // Deslizamiento hacia arriba
                         movimiento = Movimiento.UP;
                     }
