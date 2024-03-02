@@ -59,8 +59,10 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     // Controlar actualizaciones de tiempo
     private long siguienteFrame;
     // Actualiza el juego 10 veces por segundo
-    private double FPS = 10;
-    private final long milisegundosPorS = 1000;
+    //private double FPS = 10;
+    // Velocidad de la serpiente por segundo
+    private double velocidad = 10.0;
+    //private final long milisegundosPorS = 1000;
 
     private int puntuacion;
     private int[] snakeXs;
@@ -162,9 +164,11 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         juego = MediaPlayer.create(getContext(), R.raw.game);
         juego.start();
         snakeLength = 1;
-        FPS = 10;
+        velocidad = 10.0;
         vidas = 1;
         cuantoFaltaParaEscudo = 0;
+        escudoY = -1;
+        escudoX = -1;
         snakeXs[0] = numBloquesAncho / 2;
         snakeYs[0] = numBloquesAlto / 2;
 
@@ -195,11 +199,17 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     private void comerManzana() {
         if (manzanaDorada == 0) {
             puntuacion = puntuacion + 1;
-            FPS = FPS + 0.5;
+            if(puntuacion >= 10){
+                velocidad = velocidad + 0.5;
+            }
+            //FPS = FPS + 0.5;
             snakeLength++;
         } else if (manzanaDorada == 1) {
             puntuacion = puntuacion + 2;
-            FPS = FPS + 1;
+            //FPS = FPS + 1;
+            if(puntuacion >= 10){
+                velocidad++;
+            }
             snakeLength = snakeLength + 2;
         }
         if(comerManzana != null){
@@ -273,15 +283,15 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
             snakeYs[0] = 0;
         }
 
-        if(vidas == 0){
-            dead = true;
-        }
-
         // Se come a el mismo
         for (int i = snakeLength - 1; i > 0; i--) {
             if ((i > 4) && (snakeXs[0] == snakeXs[i]) && (snakeYs[0] == snakeYs[i])) {
-                dead = true;
+                vidas--;
             }
+        }
+
+        if(vidas == 0){
+            dead = true;
         }
         return dead;
     }
@@ -343,6 +353,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
                     (manzanaY * tamanoPixel) + tamanoPixel,
                     paint);
 
+            //Color del escudo
             paint.setColor(Color.CYAN);
             //Pintar escudo
             canvas.drawRect(escudoX * tamanoPixel,
@@ -359,7 +370,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     public boolean updateRequired() {
         if (siguienteFrame <= System.currentTimeMillis()) {
             // Actualiza frame
-            siguienteFrame = (long) (System.currentTimeMillis() + milisegundosPorS / FPS);
+            siguienteFrame = (System.currentTimeMillis() +  (long) (1000 / velocidad));
 
             // Devuelve true, la actualización se realiza y se dibuja de nuevo
             return true;
