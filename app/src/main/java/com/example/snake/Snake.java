@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.media.MediaPlayer;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -80,6 +81,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     private Paint paint;
 
     private MediaPlayer comerManzana;
+    private MediaPlayer comerEscudo;
     private MediaPlayer juego;
 
     public Snake(Context context, Point tamano) {
@@ -106,6 +108,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         surfaceHolder.addCallback(this);
 
         comerManzana = MediaPlayer.create(context, R.raw.eat_apple);
+        comerEscudo = MediaPlayer.create(context, R.raw.shield);
         juego = MediaPlayer.create(context, R.raw.game);
         juego.setVolume(0.3f, 0.3f);
     }
@@ -118,6 +121,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
             juegoEmpezado = 1;
         } else {
             resume();
+            juego.start();
         }
     }
 
@@ -229,6 +233,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     }
 
     private void comerEscudo(){
+        comerEscudo.start();
         Random random = new Random();
         cuantoFaltaParaEscudo = random.nextInt(5) + 1;
         vidas++;
