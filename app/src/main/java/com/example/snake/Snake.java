@@ -1,6 +1,8 @@
 package com.example.snake;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -11,10 +13,13 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 
 import java.util.Random;
 
-public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callback {
+public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callback, View.OnClickListener {
     private Thread thread = null;
     private Context context;
     private int juegoEmpezado = -1;
@@ -66,13 +71,13 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     //private final long milisegundosPorS = 1000;
 
     private int puntuacion;
-    private int[] snakeXs;
-    private int[] snakeYs;
+    private int[] snakeXs; //Cada posición X de la serpiente
+    private int[] snakeYs; //Cada posición Y de la serpiente
 
-    private float dedoX, dedoY;
-    private static final float MIN_DISTANCIA_DESLIZAMIENTO = 100;
+    private float dedoX, dedoY; //Posiciones del dedo del jugador al pulsar la pantalla
+    private static final float MIN_DISTANCIA_DESLIZAMIENTO = 100; //Distancia mínima para deslizar el dedo y cambiar posición
 
-    private volatile boolean isPlaying;
+    private volatile boolean isPlaying; //si el jugador está jugando
 
     private Canvas canvas;
 
@@ -80,9 +85,13 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
     private Paint paint;
 
-    private MediaPlayer comerManzana;
-    private MediaPlayer comerEscudo;
-    private MediaPlayer juego;
+    private MediaPlayer comerManzana; //Efecto de sonido al comer manzana
+    private MediaPlayer comerEscudo; //Efecto de sonido al comer escudo
+    private MediaPlayer juego; // Música del juego
+    private Button btnReiniciar; //Botón para reiniciar la partida
+    private Button btnVolver; //Botón para volver al menú de inicio
+    private boolean flag = true; //Bandera para saber si ya se ha inicializado los botones y no tener errores de ejecución
+    private boolean isDead = false; //Bandera para saber si el jugador ha perdido o no y así visualizar los botones
 
     public Snake(Context context, Point tamano) {
         super(context);
@@ -107,10 +116,15 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
         surfaceHolder.addCallback(this);
 
-        comerManzana = MediaPlayer.create(context, R.raw.eat_apple);
-        comerEscudo = MediaPlayer.create(context, R.raw.shield);
-        juego = MediaPlayer.create(context, R.raw.game);
-        juego.setVolume(0.3f, 0.3f);
+        //Iniciamos los 2 botones
+        btnReiniciar = new Button(context);
+        btnReiniciar.setText("Jugar de nuevo");
+        btnReiniciar.setOnClickListener(this);
+
+
+        btnVolver = new Button(context);
+        btnVolver.setText("Volver al menú");
+        btnVolver.setOnClickListener(this);
     }
 
     // Método que se llama cuando el Surface es creado
@@ -137,20 +151,65 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
     @Override
     public void run() {
+        Log.d("LLega", "Llega");
         while (isPlaying) {
             if (updateRequired()) {
                 update();
                 draw();
             }
         }
+        if(isDead) {
+            // Configuración inicial de altura, ancho y coordenadas
+            ViewGroup.MarginLayoutParams paramsReiniciar = new ViewGroup.MarginLayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            paramsReiniciar.setMargins(screenX / 3, screenY / 3, 0, 0);
+
+            ViewGroup.MarginLayoutParams paramsVolver = new ViewGroup.MarginLayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            paramsVolver.setMargins(screenX / 3, screenY / 2 - 100, 0, 0);
+
+            // Inicializo los botones en el hilo de la interfaz de usuario
+            ((Activity) getContext()).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (flag) {
+                        // Agrega el botón a la vista
+                        ((Activity) getContext()).addContentView(btnVolver, paramsVolver);
+                        ((Activity) getContext()).addContentView(btnReiniciar, paramsReiniciar);
+                        flag = false;
+                    } else {
+                        // Hacer visible el botón con las nuevas coordenadas
+                        btnVolver.setVisibility(View.VISIBLE);
+                        btnReiniciar.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
+        }
     }
 
     public void pause() {
         isPlaying = false;
-        juego.pause();
+        if(juego != null){
+            juego.pause();
+        }
         try {
             thread.join();
         } catch (InterruptedException e) {
+        }
+    }
+
+    @Override
+    public void onClick(View v){
+        if(v == btnReiniciar){
+            nuevoJuego();
+            resume();
+            btnReiniciar.setVisibility(View.GONE);
+            btnVolver.setVisibility(View.GONE);
+        } else {
+            Intent intent = new Intent(getContext(), MainActivity.class);
+            getContext().startActivity(intent);
         }
     }
 
@@ -166,7 +225,11 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     public void nuevoJuego() {
         //Empieza con 1 de tamaño, un "bloque"
         juego = MediaPlayer.create(getContext(), R.raw.game);
+        juego.setVolume(0.3f, 0.3f);
+        comerManzana = MediaPlayer.create(getContext(), R.raw.eat_apple);
+        comerEscudo = MediaPlayer.create(getContext(), R.raw.shield);
         juego.start();
+
         snakeLength = 1;
         velocidad = 10.0;
         vidas = 1;
@@ -268,8 +331,6 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     }
 
     private boolean detectarMuerte() {
-        boolean dead = false;
-
         // Se choca con el borde de la pantalla
         if (snakeXs[0] == -1){
             vidas--;
@@ -296,9 +357,9 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         }
 
         if(vidas == 0){
-            dead = true;
+            isDead = true;
         }
-        return dead;
+        return isDead;
     }
 
     public void update() {
@@ -313,8 +374,16 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         moverSnake();
 
         if (detectarMuerte()) {
+            isPlaying = false;
             juego.stop();
-            nuevoJuego();
+            comerManzana.stop();
+            comerEscudo.stop();
+            juego.release();
+            juego = null;
+            comerManzana.release();
+            comerManzana = null;
+            comerEscudo.release();
+            comerEscudo = null;
         }
     }
 
@@ -327,7 +396,12 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
             paint.setTextSize(70);
             paint.setColor(Color.WHITE);
-            canvas.drawText("Puntuación: " + puntuacion, 10, 70, paint);
+            if(isPlaying){
+                canvas.drawText("Puntuación: " + puntuacion, 10, 70, paint);
+            } else{
+                paint.setTextSize(90);
+                canvas.drawText("Puntuación: " + puntuacion, screenX / 4, screenY / 2 - 500, paint);
+            }
 
             //Color de Snake
             if(vidas > 1){

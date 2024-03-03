@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Snake</string>
+    <string name="description_game">Obtén el máximo de manzanas posibles teniendo cuidado de no chocarte con nada, incluso contigo mismo, puedes obtener escudos cada cierto tiempo para sobrevivir una vez.</string>
 </resources>
