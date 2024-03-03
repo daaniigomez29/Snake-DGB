@@ -238,6 +238,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         escudoX = -1;
         snakeXs[0] = numBloquesAncho / 2;
         snakeYs[0] = numBloquesAlto / 2;
+        isDead = false;
 
         spawnManzana();
 
