@@ -8,7 +8,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.media.MediaPlayer;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -88,6 +87,9 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     private MediaPlayer comerManzana; //Efecto de sonido al comer manzana
     private MediaPlayer comerEscudo; //Efecto de sonido al comer escudo
     private MediaPlayer juego; // Música del juego
+    private MediaPlayer juego2; //Música 2 del juego
+    private MediaPlayer juego3; //Música 3 del juego
+    private MediaPlayer perder; //Música de muerte
     private Button btnReiniciar; //Botón para reiniciar la partida
     private Button btnVolver; //Botón para volver al menú de inicio
     private boolean flag = true; //Bandera para saber si ya se ha inicializado los botones y no tener errores de ejecución
@@ -202,6 +204,9 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
     @Override
     public void onClick(View v){
+        perder.release();
+        perder = null;
+
         if(v == btnReiniciar){
             nuevoJuego();
             resume();
@@ -223,28 +228,43 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     }
 
     public void nuevoJuego() {
-        //Empieza con 1 de tamaño, un "bloque"
-        juego = MediaPlayer.create(getContext(), R.raw.game);
-        juego.setVolume(0.3f, 0.3f);
-        comerManzana = MediaPlayer.create(getContext(), R.raw.eat_apple);
-        comerEscudo = MediaPlayer.create(getContext(), R.raw.shield);
-        juego.start();
-
-        snakeLength = 1;
-        velocidad = 10.0;
-        vidas = 1;
+        iniciarSonidos();
+        snakeLength = 1; //Empieza con 1 de tamaño, un "bloque"
+        velocidad = 10.0; //Velocidad inicial de la serpiente
+        vidas = 1; //Vidas iniciales
         cuantoFaltaParaEscudo = 0;
-        escudoY = -1;
-        escudoX = -1;
+        escudoY = -1; //Posición del escudo en el alto
+        escudoX = -1; //Posición del escudo en el ancho
+        //Dónde aparece la serpiente por primera vez
         snakeXs[0] = numBloquesAncho / 2;
         snakeYs[0] = numBloquesAlto / 2;
         isDead = false;
 
-        spawnManzana();
+        spawnManzana(); //Aparece una manzana por primera vez
 
-        puntuacion = 0;
+        puntuacion = 0; //Puntuación reiniciada
 
-        siguienteFrame = System.currentTimeMillis();
+        siguienteFrame = System.currentTimeMillis(); //Siguiente frame que ve el jugador
+    }
+
+    public void iniciarSonidos(){
+        juego = MediaPlayer.create(getContext(), R.raw.game);
+        juego.setVolume(0.3f, 0.3f);
+        juego2 = MediaPlayer.create(getContext(), R.raw.juego2);
+        juego3 = MediaPlayer.create(getContext(), R.raw.modo_serio);
+        perder = MediaPlayer.create(getContext(), R.raw.death_song);
+        comerManzana = MediaPlayer.create(getContext(), R.raw.eat_apple);
+        comerEscudo = MediaPlayer.create(getContext(), R.raw.shield);
+
+        //Lo que se realiza dentro es lo que ocurre después de que se termine la canción
+        juego.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+                public void onCompletion(MediaPlayer mediaPlayer) {
+                juego2.setLooping(true);
+                juego2.start();
+            }
+        });
+        juego.start();
     }
 
     public void spawnManzana() {
@@ -270,11 +290,9 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
             if(puntuacion >= 10){
                 velocidad = velocidad + 0.5;
             }
-            //FPS = FPS + 0.5;
             snakeLength++;
         } else if (manzanaDorada == 1) {
             puntuacion = puntuacion + 2;
-            //FPS = FPS + 1;
             if(puntuacion >= 10){
                 velocidad++;
             }
@@ -374,6 +392,18 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
         moverSnake();
 
+        if(puntuacion == 40 || puntuacion == 41){
+            if(juego2.isPlaying()){
+                juego2.stop();
+            } else{
+                juego.stop();
+            }
+        }
+
+        if(puntuacion == 45 || puntuacion == 46){
+            juego3.start();
+        }
+
         if (detectarMuerte()) {
             isPlaying = false;
             juego.stop();
@@ -385,6 +415,13 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
             comerManzana = null;
             comerEscudo.release();
             comerEscudo = null;
+            juego2.release();
+            juego2 = null;
+            juego3.release();
+            juego3 = null;
+
+            perder.setLooping(true);
+            perder.start();
         }
     }
 
