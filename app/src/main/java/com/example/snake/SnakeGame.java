@@ -17,13 +17,15 @@ public class SnakeGame extends AppCompatActivity {
         //Obtiene el tamaño de la pantalla
         Display display = getWindowManager().getDefaultDisplay();
 
+        //Asignamos a tamano el tamaño de la pantalla
         Point tamano = new Point();
         display.getSize(tamano);
 
-        snake = new Snake(this, tamano);
-        setContentView(snake);
+        snake = new Snake(this, tamano); //Instancio el juego pasándole el tamaño de la pantalla
+        setContentView(snake); //La vista será la del SurfaceView
     }
 
+    //Hilo correspondiente al resumir de la aplicación que se ejecutr
     @Override
     protected void onResume() {
         super.onResume();

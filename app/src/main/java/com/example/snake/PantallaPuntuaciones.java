@@ -36,9 +36,16 @@ public class PantallaPuntuaciones extends AppCompatActivity {
         pantalla.start();
 
         if(SharedPreferencesSnake.hayDatos(this)) {
-            listaPuntuaciones = SharedPreferencesSnake.recuperarDatos(this);
+            listaPuntuaciones = SharedPreferencesSnake.recuperarDatos(this); //Obtengo la lista de puntuaciones
+
             if (!listaPuntuaciones.isEmpty()) {
-                Collections.sort(listaPuntuaciones, Collections.reverseOrder());
+                Collections.sort(listaPuntuaciones, Collections.reverseOrder()); //Ordeno de mayor a menor
+
+                if(listaPuntuaciones.size() > 3){
+                    listaPuntuaciones.subList(3, listaPuntuaciones.size()).clear(); //Elimino desde la posición 3 hasta el final de la lista para solo quedarme con los 3 primeros
+                }
+
+                SharedPreferencesSnake.guardarDatos(this, listaPuntuaciones); //Guardo la lista de nuevo
 
                 puntuacion1.setText(String.valueOf(listaPuntuaciones.get(0)));
                 if (listaPuntuaciones.size() > 1) {

@@ -23,12 +23,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //Inicialización de música y botones
         btnStart = findViewById(R.id.startGame);
         btnPuntuaciones = findViewById(R.id.btn_puntuaciones);
         mediaPlayer = MediaPlayer.create(this, R.raw.pantalla_inicio);
         mediaPlayer.setLooping(true);
         mediaPlayer.start();
 
+        //Si se hace click en Jugar, se parará la música y se hará un intent hacia la actividad que contiene el juego
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -38,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //Si se hace click en Puntuaciones, se parará la música y se hará un intent hacia la actividad de las puntuaciones
         btnPuntuaciones.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

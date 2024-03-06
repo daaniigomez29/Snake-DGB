@@ -11,10 +11,6 @@ public class SharedPreferencesSnake {
     private static final String nombrePreferencia = "preferencias";
     private static final String key = "lista";
 
-    public SharedPreferencesSnake(){
-
-    }
-
     public static void guardarDatos(Context context, List<Integer> list) {
         SharedPreferences preferences = context.getSharedPreferences(nombrePreferencia, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
@@ -43,6 +39,7 @@ public class SharedPreferencesSnake {
         return listaRecuperada;
     }
 
+    //Si hay datos en el sharedPreferences devolverá True
     public static boolean hayDatos(Context context) {
         SharedPreferences preferences = context.getSharedPreferences(nombrePreferencia, Context.MODE_PRIVATE);
         return preferences.contains(key);
