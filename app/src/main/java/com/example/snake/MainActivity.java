@@ -11,10 +11,10 @@ import android.view.View;
 import android.widget.Button;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeSet;
 
 public class MainActivity extends AppCompatActivity {
-    private ArrayList<Integer> listaPuntuaciones = new ArrayList<>();
     private MediaPlayer mediaPlayer;
     private Button btnStart;
     private Button btnPuntuaciones;

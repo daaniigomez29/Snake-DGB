@@ -42,4 +42,9 @@ public class SharedPreferencesSnake {
 
         return listaRecuperada;
     }
+
+    public static boolean hayDatos(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(nombrePreferencia, Context.MODE_PRIVATE);
+        return preferences.contains(key);
+    }
 }

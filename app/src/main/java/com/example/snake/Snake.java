@@ -132,7 +132,9 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         btnVolver.setText("Volver al menú");
         btnVolver.setOnClickListener(this);
 
-        listaPuntuaciones = SharedPreferencesSnake.recuperarDatos(getContext());
+        if(SharedPreferencesSnake.hayDatos(getContext())){
+            listaPuntuaciones = SharedPreferencesSnake.recuperarDatos(getContext());
+        }
     }
 
     // Método que se llama cuando el Surface es creado

@@ -35,15 +35,22 @@ public class PantallaPuntuaciones extends AppCompatActivity {
         pantalla.setLooping(true);
         pantalla.start();
 
-        listaPuntuaciones = SharedPreferencesSnake.recuperarDatos(this);
+        if(SharedPreferencesSnake.hayDatos(this)) {
+            listaPuntuaciones = SharedPreferencesSnake.recuperarDatos(this);
+            if (!listaPuntuaciones.isEmpty()) {
+                Collections.sort(listaPuntuaciones, Collections.reverseOrder());
 
-        Collections.sort(listaPuntuaciones, Collections.reverseOrder());
+                puntuacion1.setText(String.valueOf(listaPuntuaciones.get(0)));
+                if (listaPuntuaciones.size() > 1) {
+                    puntuacion2.setText(String.valueOf(listaPuntuaciones.get(1)));
 
-        Log.d("lista Ordenada", listaPuntuaciones.toString());
+                }
+                if (listaPuntuaciones.size() > 2) {
+                    puntuacion3.setText(String.valueOf(listaPuntuaciones.get(2)));
+                }
+            }
+        }
 
-        puntuacion1.setText(String.valueOf(listaPuntuaciones.get(0)));
-        puntuacion2.setText(String.valueOf(listaPuntuaciones.get(1)));
-        puntuacion3.setText(String.valueOf(listaPuntuaciones.get(2)));
 
 
         btnVolver.setOnClickListener(new View.OnClickListener() {
