@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.media.MediaPlayer;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -92,10 +93,12 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     private MediaPlayer juego2; //Música 2 del juego
     private MediaPlayer juego3; //Música 3 del juego
     private MediaPlayer perder; //Música de muerte
+    private MediaPlayer nuevoRecord; //Música cuando se hace un nuevo top 1
     private Button btnReiniciar; //Botón para reiniciar la partida
     private Button btnVolver; //Botón para volver al menú de inicio
     private boolean flag = true; //Bandera para saber si ya se ha inicializado los botones y no tener errores de ejecución
     private boolean isDead = false; //Bandera para saber si el jugador ha perdido o no y así visualizar los botones
+    private int maximaPuntuacion; //Máxima puntuación de la lista
 
     private List<Integer> listaPuntuaciones = new ArrayList<>();
 
@@ -216,8 +219,11 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
     @Override
     public void onClick(View v){
-        perder.release();
-        perder = null;
+            perder.release();
+            perder = null;
+            nuevoRecord.release();
+            perder = null;
+
 
         if(v == btnReiniciar){
             nuevoJuego();
@@ -225,6 +231,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
             btnReiniciar.setVisibility(View.GONE);
             btnVolver.setVisibility(View.GONE);
         } else {
+            liberarAudios();
             Intent intent = new Intent(getContext(), MainActivity.class);
             getContext().startActivity(intent);
         }
@@ -265,6 +272,7 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         juego2 = MediaPlayer.create(getContext(), R.raw.juego2);
         juego3 = MediaPlayer.create(getContext(), R.raw.modo_serio);
         perder = MediaPlayer.create(getContext(), R.raw.death_song);
+        nuevoRecord = MediaPlayer.create(getContext(), R.raw.nuevo_record);
         comerManzana = MediaPlayer.create(getContext(), R.raw.eat_apple);
         comerEscudo = MediaPlayer.create(getContext(), R.raw.shield);
 
@@ -419,18 +427,36 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         if (detectarMuerte()) {
             isPlaying = false;
 
+            int puntuacionMaxima = 0;
+
+            for (int i=0; i < listaPuntuaciones.size();i++){
+                if(i > puntuacionMaxima){
+                    puntuacionMaxima = i;
+                }
+            }
+
+            if(puntuacion > puntuacionMaxima){
+                nuevoRecord.setLooping(true);
+                nuevoRecord.start();
+            } else{
+                perder.setLooping(true);
+                perder.start();
+            }
+
+            pararAudios();
             listaPuntuaciones.add(puntuacion);
             SharedPreferencesSnake.guardarDatos(getContext(), listaPuntuaciones);
 
-            perder.setLooping(true);
-            perder.start();
         }
     }
 
-    public void liberarAudios(){
+    public void pararAudios(){
         juego.stop();
         comerManzana.stop();
         comerEscudo.stop();
+    }
+
+    public void liberarAudios(){
         juego.release();
         juego = null;
         comerManzana.release();
@@ -441,7 +467,6 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         juego2 = null;
         juego3.release();
         juego3 = null;
-
     }
 
     public void draw() {
