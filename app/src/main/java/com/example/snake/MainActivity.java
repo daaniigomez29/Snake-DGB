@@ -10,10 +10,14 @@ import android.view.Display;
 import android.view.View;
 import android.widget.Button;
 
+import java.util.ArrayList;
+import java.util.TreeSet;
+
 public class MainActivity extends AppCompatActivity {
-    MediaPlayer mediaPlayer;
-    Button btnStart;
-    Button btnPuntuaciones;
+    private ArrayList<Integer> listaPuntuaciones = new ArrayList<>();
+    private MediaPlayer mediaPlayer;
+    private Button btnStart;
+    private Button btnPuntuaciones;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

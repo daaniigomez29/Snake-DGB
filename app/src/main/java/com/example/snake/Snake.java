@@ -16,6 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callback, View.OnClickListener {
@@ -95,6 +97,8 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
     private boolean flag = true; //Bandera para saber si ya se ha inicializado los botones y no tener errores de ejecución
     private boolean isDead = false; //Bandera para saber si el jugador ha perdido o no y así visualizar los botones
 
+    private List<Integer> listaPuntuaciones = new ArrayList<>();
+
     public Snake(Context context, Point tamano) {
         super(context);
 
@@ -127,6 +131,8 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
         btnVolver = new Button(context);
         btnVolver.setText("Volver al menú");
         btnVolver.setOnClickListener(this);
+
+        listaPuntuaciones = SharedPreferencesSnake.recuperarDatos(getContext());
     }
 
     // Método que se llama cuando el Surface es creado
@@ -161,34 +167,38 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
             }
         }
         if(isDead) {
-            // Configuración inicial de altura, ancho y coordenadas
-            ViewGroup.MarginLayoutParams paramsReiniciar = new ViewGroup.MarginLayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
-            paramsReiniciar.setMargins(screenX / 3, screenY / 3, 0, 0);
-
-            ViewGroup.MarginLayoutParams paramsVolver = new ViewGroup.MarginLayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
-            paramsVolver.setMargins(screenX / 3, screenY / 2 - 100, 0, 0);
-
-            // Inicializo los botones en el hilo de la interfaz de usuario
-            ((Activity) getContext()).runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (flag) {
-                        // Agrega el botón a la vista
-                        ((Activity) getContext()).addContentView(btnVolver, paramsVolver);
-                        ((Activity) getContext()).addContentView(btnReiniciar, paramsReiniciar);
-                        flag = false;
-                    } else {
-                        // Hacer visible el botón con las nuevas coordenadas
-                        btnVolver.setVisibility(View.VISIBLE);
-                        btnReiniciar.setVisibility(View.VISIBLE);
-                    }
-                }
-            });
+            visualizarBotonesMuerte();
         }
+    }
+
+    public void visualizarBotonesMuerte(){
+        // Configuración inicial de altura, ancho y coordenadas
+        ViewGroup.MarginLayoutParams paramsReiniciar = new ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        paramsReiniciar.setMargins(screenX / 3, screenY / 3, 0, 0);
+
+        ViewGroup.MarginLayoutParams paramsVolver = new ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        paramsVolver.setMargins(screenX / 3, screenY / 2 - 100, 0, 0);
+
+        // Inicializo los botones en el hilo de la interfaz de usuario
+        ((Activity) getContext()).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (flag) {
+                    // Agrega el botón a la vista
+                    ((Activity) getContext()).addContentView(btnVolver, paramsVolver);
+                    ((Activity) getContext()).addContentView(btnReiniciar, paramsReiniciar);
+                    flag = false;
+                } else {
+                    // Hacer visible el botón con las nuevas coordenadas
+                    btnVolver.setVisibility(View.VISIBLE);
+                    btnReiniciar.setVisibility(View.VISIBLE);
+                }
+            }
+        });
     }
 
     public void pause() {
@@ -406,23 +416,30 @@ public class Snake extends SurfaceView implements Runnable, SurfaceHolder.Callba
 
         if (detectarMuerte()) {
             isPlaying = false;
-            juego.stop();
-            comerManzana.stop();
-            comerEscudo.stop();
-            juego.release();
-            juego = null;
-            comerManzana.release();
-            comerManzana = null;
-            comerEscudo.release();
-            comerEscudo = null;
-            juego2.release();
-            juego2 = null;
-            juego3.release();
-            juego3 = null;
+
+            listaPuntuaciones.add(puntuacion);
+            SharedPreferencesSnake.guardarDatos(getContext(), listaPuntuaciones);
 
             perder.setLooping(true);
             perder.start();
         }
+    }
+
+    public void liberarAudios(){
+        juego.stop();
+        comerManzana.stop();
+        comerEscudo.stop();
+        juego.release();
+        juego = null;
+        comerManzana.release();
+        comerManzana = null;
+        comerEscudo.release();
+        comerEscudo = null;
+        juego2.release();
+        juego2 = null;
+        juego3.release();
+        juego3 = null;
+
     }
 
     public void draw() {

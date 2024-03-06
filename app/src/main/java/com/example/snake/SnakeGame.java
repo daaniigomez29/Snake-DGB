@@ -14,6 +14,7 @@ public class SnakeGame extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //Obtiene el tamaño de la pantalla
         Display display = getWindowManager().getDefaultDisplay();
 
         Point tamano = new Point();
